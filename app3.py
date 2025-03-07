@@ -43,13 +43,19 @@ if uploaded_file is not None:
         
         # Plot improved horizontal bar chart
         fig, ax = plt.subplots(figsize=(12, 8))
-        ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue', edgecolor='black')
+        bars = ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue', edgecolor='black')
         ax.set_xlabel("Amount", fontsize=12)
         ax.set_ylabel("Description", fontsize=12)
         ax.set_title("Top 20 Transaction Amounts by Description", fontsize=14, fontweight='bold')
         plt.xticks(fontsize=10)
         plt.yticks(fontsize=10)
         plt.gca().invert_yaxis()
+        
+        # Add rounded values at the end of each bar
+        for bar in bars:
+            width = bar.get_width()
+            ax.text(width + 0.5, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
+                    va='center', fontsize=10, fontweight='bold', color='black')
         
         st.pyplot(fig)
     else:
