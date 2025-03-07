@@ -22,9 +22,13 @@ def extract_transactions_from_pdf(pdf_file, password=None):
                         country = match.group(4)
                         transaction_type = match.group(5)
                         amount = float(match.group(6).replace(',', ''))  # Convert amount to decimal
-                        transactions.append([posting_date, transaction_date, description, country, transaction_type, amount])
+                        
+                        # Determine currency based on description position
+                        currency = "USD" if re.search(r"\b[A-Za-z]+\b\s+[\d.,-]+$", line) else "PEN"
+                        
+                        transactions.append([posting_date, transaction_date, description, country, transaction_type, amount, currency])
     
-    return pd.DataFrame(transactions, columns=["Posting Date", "Transaction Date", "Description", "Country", "Type", "Amount"])
+    return pd.DataFrame(transactions, columns=["Posting Date", "Transaction Date", "Description", "Country", "Type", "Amount", "Currency"])
 
 # Streamlit App
 st.title("PDF Transaction Extractor")
@@ -38,8 +42,8 @@ if uploaded_file is not None:
     
     if not transactions_df.empty:
         # Separate transactions by currency
-        transactions_pen = transactions_df[transactions_df["Country"] == "PE"]
-        transactions_usd = transactions_df[transactions_df["Country"] != "PE"]
+        transactions_pen = transactions_df[transactions_df["Currency"] == "PEN"]
+        transactions_usd = transactions_df[transactions_df["Currency"] == "USD"]
         
         # Aggregate amounts by description and select top 20
         def plot_top_transactions(df, currency):
