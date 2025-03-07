@@ -37,26 +37,36 @@ if uploaded_file is not None:
     transactions_df = extract_transactions_from_pdf(uploaded_file, password)
     
     if not transactions_df.empty:
+        # Separate transactions by currency
+        transactions_pen = transactions_df[transactions_df["Country"] == "PE"]
+        transactions_usd = transactions_df[transactions_df["Country"] != "PE"]
+        
         # Aggregate amounts by description and select top 20
-        agg_df = transactions_df.groupby("Description")["Amount"].sum().reset_index()
-        agg_df = agg_df.sort_values(by="Amount", ascending=False).head(20)
+        def plot_top_transactions(df, currency):
+            agg_df = df.groupby("Description")["Amount"].sum().reset_index()
+            agg_df = agg_df.sort_values(by="Amount", ascending=False).head(20)
+            
+            # Plot improved horizontal bar chart
+            fig, ax = plt.subplots(figsize=(12, 8))
+            bars = ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue', edgecolor='black')
+            ax.set_xlabel(f"Amount ({currency})", fontsize=12)
+            ax.set_ylabel("Description", fontsize=12)
+            ax.set_title(f"Top 20 Transaction Amounts in {currency}", fontsize=14, fontweight='bold')
+            plt.xticks(fontsize=10)
+            plt.yticks(fontsize=10)
+            plt.gca().invert_yaxis()
+            
+            # Add rounded values at the end of each bar
+            for bar in bars:
+                width = bar.get_width()
+                ax.text(width + 0.5, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
+                        va='center', fontsize=10, fontweight='bold', color='black')
+            
+            st.pyplot(fig)
         
-        # Plot improved horizontal bar chart
-        fig, ax = plt.subplots(figsize=(12, 8))
-        bars = ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue', edgecolor='black')
-        ax.set_xlabel("Amount", fontsize=12)
-        ax.set_ylabel("Description", fontsize=12)
-        ax.set_title("Top 20 Transaction Amounts by Description", fontsize=14, fontweight='bold')
-        plt.xticks(fontsize=10)
-        plt.yticks(fontsize=10)
-        plt.gca().invert_yaxis()
-        
-        # Add rounded values at the end of each bar
-        for bar in bars:
-            width = bar.get_width()
-            ax.text(width + 0.5, bar.get_y() + bar.get_height()/2, f'{width:.2f}', 
-                    va='center', fontsize=10, fontweight='bold', color='black')
-        
-        st.pyplot(fig)
+        if not transactions_pen.empty:
+            plot_top_transactions(transactions_pen, "PEN")
+        if not transactions_usd.empty:
+            plot_top_transactions(transactions_usd, "USD")
     else:
         st.error("No transactions extracted. Check the password or file format.")
