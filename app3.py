@@ -37,16 +37,18 @@ if uploaded_file is not None:
     transactions_df = extract_transactions_from_pdf(uploaded_file, password)
     
     if not transactions_df.empty:
-        # Aggregate amounts by description
+        # Aggregate amounts by description and select top 20
         agg_df = transactions_df.groupby("Description")["Amount"].sum().reset_index()
-        agg_df = agg_df.sort_values(by="Amount", ascending=False)
+        agg_df = agg_df.sort_values(by="Amount", ascending=False).head(20)
         
-        # Plot horizontal bar chart
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue')
-        ax.set_xlabel("Amount")
-        ax.set_ylabel("Description")
-        ax.set_title("Transaction Amounts by Description")
+        # Plot improved horizontal bar chart
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.barh(agg_df["Description"], agg_df["Amount"], color='skyblue', edgecolor='black')
+        ax.set_xlabel("Amount", fontsize=12)
+        ax.set_ylabel("Description", fontsize=12)
+        ax.set_title("Top 20 Transaction Amounts by Description", fontsize=14, fontweight='bold')
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
         plt.gca().invert_yaxis()
         
         st.pyplot(fig)
