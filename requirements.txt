@@ -1,4 +1,6 @@
 streamlit
 pandas
-pdfplumber
+pdfminer.six
+PyPDF2
 matplotlib
+seaborn
